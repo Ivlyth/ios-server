@@ -30,19 +30,19 @@ class BaseHandler(tornado.web.RequestHandler):
         该方法不能接受其他参数，否则报错
         用于数据库连接初始化等操作
         """
-        pass
+
+        self._parse_request_args()
+        self._parse_request_body()
+        print '_check_%s'%self.request.method.lower()
+        _check_func = getattr(self, '_check_%s'%self.request.method.lower(), None)
+        if _check_func is not None:
+            _result = _check_func()
+            if not _result:
+                self.finish()
 
     @property
     def mysql_session(self):
         return self.application.mysql_session
-
-    @property
-    def boss_mysql_session(self):
-        return self.application.boss_mysql_session
-
-    @property
-    def watermelon_mysql_session(self):
-        return self.application.watermelon_mysql_session
 
     @property
     def redis_session(self):
@@ -80,8 +80,6 @@ class BaseHandler(tornado.web.RequestHandler):
         释放资源等操作在这里完成
         """
         self.mysql_session.close()
-        self.boss_mysql_session.close()
-        self.watermelon_mysql_session.close()
 
     def get_current_user(self):
         """
@@ -163,8 +161,8 @@ class BaseHandler(tornado.web.RequestHandler):
         if hasattr(self, 'request_data'):
             return getattr(self, 'request_data')
 
-        data_args = self.parse_request_args()
-        data_body = self.parse_request_body()
+        data_args = self._parse_request_args()
+        data_body = self._parse_request_body()
         # 合并
         res = data_args if data_args.update(data_body) or data_args else data_body
 
@@ -179,7 +177,7 @@ class BaseHandler(tornado.web.RequestHandler):
         setattr(self, 'request_data', res)
         return res
 
-    def parse_request_body(self):
+    def _parse_request_body(self):
         """ 处理application/json类型的请求 """
         body = {}
         if self.request.body:
@@ -198,9 +196,11 @@ class BaseHandler(tornado.web.RequestHandler):
                         body[urllib.unquote(k.strip())] = urllib.unquote(v.strip())
                 except ValueError:
                     pass
+
+        self._body_data = body
         return body
 
-    def parse_request_args(self):
+    def _parse_request_args(self):
         """处理请求字符串"""
         args = {}
         if self.request.arguments:
@@ -209,6 +209,8 @@ class BaseHandler(tornado.web.RequestHandler):
                     args.setdefault(key, value[0])
                 else:
                     args.setdefault(key, value)
+
+        self._query_data = args
         return args
 
 
@@ -242,71 +244,3 @@ class PageNotFoundHandler(BaseHandler):
 
     def options(self, *args, **kwargs):
         self.set_status(404, 'Page Not Found')
-
-
-class AsyncExampleHandler(BaseHandler):
-    """
-    异步调用示例
-    以下两种写法等价，gen.Task用于回调中异常处理，否则异常不能被捕获
-    try:
-        yield http_client.fetch(url)    该方法不能捕获到fetch产生的异常
-    except:
-        pass
-
-    yield gen.Task(http_client.fetch, url)
-    """
-
-    # get方法内部，单个请求
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def single_get(self):
-        url = 'www.example.com'
-        http_client = tornado.httpclient.AsyncHTTPClient()
-        response = yield http_client.fetch(url)
-        self.do_response(response)
-        self.finish()
-
-
-    # get方法内部，多个请求
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def multi_get(self):
-        urls = ['a.example.com', 'b.example.com', 'c.example.com']
-        http_client = tornado.httpclient.AsyncHTTPClient()
-        response_list = yield [http_client.fetch(url) for url in urls]  # 返回一个respose列表，每一项为一个url的请求结果
-        for response in response_list:
-            # 处理response_list
-            self.do_response(response)
-        self.finish()
-
-    # 异步调用从get方法中分离
-    @tornado.web.asynchronous
-    @tornado.gen.coroutine
-    def seperate_get(self):
-        urls = ['a.example.com', 'b.example.com', 'c.example.com']
-        resp_list = yield [self.async_call(url) for url in urls]
-        self.do_response(resp_list)
-        self.finish()
-
-    @tornado.gen.coroutine
-    def async_call(self, url):
-        """
-        python2中分离的异步回调必须用raise触发Return异常返回结果
-        python3中则使用return
-        """
-        http_client = tornado.httpclient.AsyncHTTPClient()
-        response = yield http_client.fetch(url)
-        raise tornado.gen.Return(response)
-
-    def do_response(self, response):
-        """
-        response对象有两个主要属性 code和body
-        code: http响应状态码 200 为正常请求
-        body: http响应数据
-        """
-        if response.code == 200:
-            result = response.body
-            # do_result
-            pass
-        else:
-            pass
