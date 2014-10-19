@@ -42,6 +42,8 @@ _db_config = {
 
 _db_connect_params = '%(db_type)s+%(db_driven)s://%(db_user)s:%(db_passwd)s@%(db_host)s/%(db_selected_db)s?charset=%(db_charset)s'
 
+TABLE_PREFIX = 'ios_'
+
 # 数据库连接串，供sqlalchemy使用
 DB_CONNECT_PARAMS = _db_connect_params % _db_config
 DB_TIMEOUT = 3600
