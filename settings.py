@@ -32,8 +32,6 @@ define('logfile', default=_default_log_file, type=str, help=u'Log File')
 
 parse_command_line()
 
-TAN14_KEY = 'd64623c9cb396f79def1087f0990cf5b'
-
 _LOCAL = 1
 _DEV = 2
 _QA = 3
@@ -72,37 +70,8 @@ _db_config = {
 
 _db_connect_params = '%(db_type)s+%(db_driven)s://%(db_user)s:%(db_passwd)s@%(db_host)s/%(db_selected_db)s?charset=%(db_charset)s'
 
-# 数据库配置
-_boss_mysqldb_host = '115.182.75.60' if RUNTIME_ENV == 4 else ('192.168.8.11' if RUNTIME_ENV==3 else ('192.168.8.10' if RUNTIME_ENV==2 else 'localhost'))
-_boss_db_config = {
-    'db_type': 'mysql',
-    'db_driven': 'mysqldb',
-    'db_user': 'root',
-    'db_passwd': 'bmw12345',
-    'db_host': _boss_mysqldb_host,
-    'db_port': '3306',
-    'db_selected_db': 'boss',
-    'db_charset': 'utf8'
-}
-
-# 数据库配置
-_watermelon_mysqldb_host = '115.182.75.61' if RUNTIME_ENV == 4 else ('192.168.8.11' if RUNTIME_ENV==3 else ('192.168.8.10' if RUNTIME_ENV==2 else 'localhost'))
-_watermelon_db_config = {
-    'db_type': 'mysql',
-    'db_driven': 'mysqldb',
-    'db_user': 'root',
-    'db_passwd': 'bmw12345',
-    'db_host': _watermelon_mysqldb_host,
-    'db_port': '3306',
-    'db_selected_db': 'watermelon',
-    'db_charset': 'utf8'
-}
-
-
 # 数据库连接串，供sqlalchemy使用
 DB_CONNECT_PARAMS = _db_connect_params % _db_config
-BOSS_DB_CONNECT_PARAMS = _db_connect_params % _boss_db_config
-WATERMELON_DB_CONNECT_PARAMS = _db_connect_params % _watermelon_db_config
 DB_TIMEOUT = 3600
 
 # FOR REDIS
