@@ -60,8 +60,8 @@ _mcaccount_mysqldb_host = 'localhost'
 _db_config = {
     'db_type': 'mysql',
     'db_driven': 'mysqldb',
-    'db_user': 'root',
-    'db_passwd': 'bmw12345',
+    'db_user': 'test',
+    'db_passwd': 'test',
     'db_host': _mcaccount_mysqldb_host,#localhost
     'db_port': '3306',
     'db_selected_db': 'mcaccount',
